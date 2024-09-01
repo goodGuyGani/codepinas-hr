@@ -3,7 +3,6 @@
 import * as React from "react"
 import { DashIcon } from "@radix-ui/react-icons"
 import { OTPInput, OTPInputContext } from "input-otp"
-
 import { cn } from "~/lib/utils"
 
 const InputOTP = React.forwardRef<
@@ -35,7 +34,16 @@ const InputOTPSlot = React.forwardRef<
   React.ComponentPropsWithoutRef<"div"> & { index: number }
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext)
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
+  
+  // Get the slot at the given index
+  const slot = inputOTPContext.slots[index]
+
+  // Handle the case where the slot is undefined
+  if (!slot) {
+    return null // or return some fallback JSX
+  }
+
+  const { char, hasFakeCaret, isActive } = slot
 
   return (
     <div
