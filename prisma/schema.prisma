@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("POSTGRES_URL")
+}
+
+model department {
+  departmentId   Int        @id @default(autoincrement())
+  departmentName String
+  managerId      Int?
+  employee       employee[]
+}
+
+model employee {
+  employeeId      Int               @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String
+  password        String?
+  phoneNumber     String?
+  departmentId    Int?
+  position        String?
+  dateOfJoining   DateTime?
+  verified        Boolean?
+  status          employee_status
+  department      department?       @relation(fields: [departmentId], references: [departmentId], map: "Employee_departmentId_fkey")
+  faceRecognition faceRecognition[]
+  leave           leave[]
+  overtime        overtime[]
+  skills          skill[]
+  timeKeeping     timeKeeping[]
+  userRole        userRole[]
+  workHistory   workHistory[]
+  employeeRemarks employeeRemark[]
+
+  @@index([departmentId], map: "Employee_departmentId_idx")
+}
+
+model workHistory {
+  workHistoryId Int       @id @default(autoincrement())
+  employeeId    Int
+  company       String
+  jobTitle      String
+  startDate     DateTime
+  endDate       DateTime?
+  employee      employee  @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
+
+  @@index([employeeId])
+}
+
+model skill {
+  skillId    Int      @id @default(autoincrement())
+  name       String
+  employeeId Int
+  employee   employee @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
+
+  @@index([employeeId])
+}
+
+model employeeRemark {
+  remarkId      Int      @id @default(autoincrement())
+  employeeId    Int
+  remark        String
+  authorName    String
+  authorPosition String
+  employee      employee @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
+
+  @@index([employeeId])
+}
+
+model faceRecognition {
+  recognitionId   Int      @id @default(autoincrement())
+  employeeId      Int
+  imagePath       String
+  recognitionDate DateTime
+  employee        employee @relation(fields: [employeeId], references: [employeeId], map: "FaceRecognition_employeeId_fkey")
+
+  @@index([employeeId], map: "FaceRecognition_employeeId_idx")
+}
+
+model leave {
+  leaveId    Int             @id @default(autoincrement())
+  employeeId Int
+  leaveType  leave_leaveType
+  startDate  DateTime
+  endDate    DateTime
+  status     leave_status
+  employee   employee        @relation(fields: [employeeId], references: [employeeId], map: "Leave_employeeId_fkey")
+
+  @@index([employeeId], map: "Leave_employeeId_idx")
+}
+
+model overtime {
+  overtimeId   Int             @id @default(autoincrement())
+  employeeId   Int
+  overtimeDate DateTime
+  hoursWorked  Float
+  status       overtime_status
+  employee     employee        @relation(fields: [employeeId], references: [employeeId], map: "Overtime_employeeId_fkey")
+
+  @@index([employeeId], map: "Overtime_employeeId_idx")
+}
+
+model permission {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique(map: "Permission_name_key")
+  rolepermission rolePermission[]
+}
+
+model role {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique(map: "Role_name_key")
+  rolepermission rolePermission[]
+  userrole       userRole[]
+}
+
+model rolePermission {
+  roleId       Int
+  permissionId Int
+  permission   permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, map: "RolePermission_permissionId_fkey")
+  role         role       @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "RolePermission_roleId_fkey")
+
+  @@id([roleId, permissionId])
+  @@index([permissionId], map: "RolePermission_permissionId_idx")
+}
+
+model timeKeeping {
+  timekeepingId Int       @id @default(autoincrement())
+  employeeId    Int
+  checkInTime   DateTime
+  checkOutTime  DateTime?
+  workDate      DateTime
+  employee      employee  @relation(fields: [employeeId], references: [employeeId], map: "Timekeeping_employeeId_fkey")
+
+  @@index([employeeId], map: "Timekeeping_employeeId_idx")
+}
+
+model userRole {
+  employeeId Int
+  roleId     Int
+  employee   employee @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade, map: "UserRole_employeeId_fkey")
+  role       role     @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "UserRole_roleId_fkey")
+
+  @@id([employeeId, roleId])
+  @@index([roleId], map: "UserRole_roleId_idx")
+}
+
+enum leave_leaveType {
+  Sick
+  Casual
+  Earned
+  Maternity
+  Paternity
+}
+
+enum overtime_status {
+  Pending
+  Approved
+  Rejected
+}
+
+enum leave_status {
+  Pending
+  Approved
+  Rejected
+}
+
+enum employee_status {
+  Active
+  Inactive
+}
